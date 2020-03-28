@@ -1,0 +1,1 @@
+This is an NVDA add-on for Slack.
