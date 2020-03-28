@@ -16,28 +16,11 @@ def isSlackMessage(obj):
 
 
 def getSlackMessageTextContainer(obj):
-	container = getActionsContainer(obj)
-	if container is not None:
-		for desc in obj.recursiveDescendants:
-			if CLS_MSG_TEXT in getattr(desc, 'IA2Attributes', {}).get('class', ''):
-				return desc
-	return None
+	return findElementWithClass(CLS_MSG_TEXT, obj)
 
 
 def getMessageSender(obj):
-	container = getActionsContainer(obj)
-	if container is not None:
-		for desc in obj.recursiveDescendants:
-			if CLS_MSG_SENDER in getattr(desc, 'IA2Attributes', {}).get('class', ''):
-				return desc
-	return None
-
-
-def getActionsContainer(obj):
-	for desc in obj.recursiveDescendants:
-		if CLS_ACTIONS in getattr(desc, 'IA2Attributes', {}).get('class', ''):
-			return desc
-	return None
+	return findElementWithClass(CLS_MSG_SENDER, obj)
 
 
 def findLinksInMessage(msgContainer):
@@ -48,14 +31,21 @@ def findLinksInMessage(msgContainer):
 	return links
 
 
+def findElementWithClass(cls, startingPoint):
+	for desc in startingPoint.recursiveDescendants:
+		if cls in getattr(desc, 'IA2Attributes', {}).get('class', ''):
+			return desc
+	return None
+
+
 class AppModule(appModuleHandler.AppModule):
 	def script_openURL(self, gesture):
-		nav = api.getNavigatorObject()
-		if not isSlackMessage(nav):
+		focus = api.getFocusObject()
+		if not isSlackMessage(focus):
 			ui.message("You don't seem to be focused on a Slack message")
 			return
 
-		txt = getSlackMessageTextContainer(nav)
+		txt = getSlackMessageTextContainer(focus)
 		if txt is None:
 			ui.message('Could not access the text of this message')
 			return
@@ -68,12 +58,12 @@ class AppModule(appModuleHandler.AppModule):
 		links[0].doAction()
 
 	def script_activateSenderMenu(self, gesture):
-		nav = api.getNavigatorObject()
-		if not isSlackMessage(nav):
+		focus = api.getFocusObject()
+		if not isSlackMessage(focus):
 			ui.message("You don't seem to be focused on a Slack message")
 			return
 
-		sender = getMessageSender(nav)
+		sender = getMessageSender(focus)
 		if sender is not None:
 			sender.doAction()
 		else:
